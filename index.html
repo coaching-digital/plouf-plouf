@@ -10,48 +10,98 @@ body {
   font-family: Arial, sans-serif;
   background: linear-gradient(135deg, #1e3c72, #2a5298);
   color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   height: 100vh;
 }
 
 .container {
-  background: rgba(0,0,0,0.4);
-  padding: 30px;
-  border-radius: 15px;
-  width: 400px;
-  text-align: center;
+  display: flex;
+  width: 100%;
+  height: 100vh;
 }
 
+/* Colonne gauche */
+.left {
+  flex: 1.2;
+  padding: 40px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.left h2 {
+  margin-top: 0;
+}
+
+/* Zone prénoms */
 textarea {
+  flex: 1;
   width: 100%;
-  height: 100px;
-  border-radius: 8px;
+  border-radius: 12px;
   border: none;
-  padding: 10px;
-  margin-bottom: 15px;
+  padding: 20px;
+  font-size: 18px;
   resize: none;
+  margin-bottom: 20px;
+}
+
+/* Boutons */
+.buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 button {
-  padding: 10px 15px;
-  margin: 5px;
+  flex: 1;
+  padding: 14px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 15px;
+  transition: 0.2s;
 }
 
 #drawBtn { background: #00c853; color: white; }
 #resetBtn { background: #2962ff; color: white; }
 #removeBtn { background: #d50000; color: white; }
 
-.result {
-  margin-top: 20px;
-  font-size: 28px;
+button:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+/* Colonne droite résultat */
+.right {
+  flex: 0.8;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 60px;
   font-weight: bold;
-  min-height: 40px;
+  text-align: center;
+  padding: 20px;
+}
+
+#result {
+  transition: transform 0.3s ease;
+}
+
+.winner {
+  transform: scale(1.2);
+}
+
+/* Responsive mobile */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .right {
+    font-size: 40px;
+    min-height: 200px;
+  }
 }
 </style>
 </head>
@@ -59,15 +109,23 @@ button {
 <body>
 
 <div class="container">
-  <h2>🎯 Tirage au Sort</h2>
-  
-  <textarea id="namesInput" placeholder="Entrez un prénom par ligne..."></textarea>
-  
-  <button id="drawBtn">Lancer le tirage</button>
-  <button id="resetBtn">Recommencer</button>
-  <button id="removeBtn">Sans le prénom tiré</button>
-  
-  <div class="result" id="result"></div>
+
+  <div class="left">
+    <h2>🎯 Tirage au Sort</h2>
+
+    <textarea id="namesInput" placeholder="Entrez un prénom par ligne..."></textarea>
+
+    <div class="buttons">
+      <button id="drawBtn">Lancer</button>
+      <button id="resetBtn">Recommencer</button>
+      <button id="removeBtn">Sans le tiré</button>
+    </div>
+  </div>
+
+  <div class="right">
+    <div id="result"></div>
+  </div>
+
 </div>
 
 <script>
@@ -93,12 +151,12 @@ function animateDraw(finalCallback) {
     resultDiv.textContent = participants[randomIndex];
     iterations++;
 
-    if (iterations > 25) {
+    if (iterations > 30) {
       clearInterval(interval);
       isAnimating = false;
       finalCallback();
     }
-  }, 80);
+  }, 70);
 }
 
 document.getElementById("drawBtn").addEventListener("click", function () {
@@ -111,16 +169,21 @@ document.getElementById("drawBtn").addEventListener("click", function () {
     return;
   }
 
+  const resultDiv = document.getElementById("result");
+  resultDiv.classList.remove("winner");
+
   animateDraw(function () {
     const winnerIndex = Math.floor(Math.random() * participants.length);
     lastWinner = participants[winnerIndex];
-    document.getElementById("result").textContent = "🎉 " + lastWinner;
+    resultDiv.textContent = "🎉 " + lastWinner;
+    resultDiv.classList.add("winner");
   });
 });
 
 document.getElementById("resetBtn").addEventListener("click", function () {
   if (isAnimating) return;
   document.getElementById("result").textContent = "";
+  document.getElementById("result").classList.remove("winner");
 });
 
 document.getElementById("removeBtn").addEventListener("click", function () {
@@ -130,6 +193,7 @@ document.getElementById("removeBtn").addEventListener("click", function () {
   participants = participants.filter(name => name !== lastWinner);
   document.getElementById("namesInput").value = participants.join("\n");
   document.getElementById("result").textContent = "";
+  document.getElementById("result").classList.remove("winner");
   lastWinner = null;
 });
 </script>
