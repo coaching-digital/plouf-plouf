@@ -10,51 +10,70 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: #f2f2f5;
-  display: flex;
-  justify-content: center;
-  padding: 20px;
+  padding: 40px;
 }
 
-.app {
-  width: 100%;
-  max-width: 500px;
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #6C4CF1;
+  font-size: 32px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+.names-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-bottom: 50px;
+  min-height: 60px;
+}
+
+.name-tag {
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: white;
+  border: 2px solid #e5e5e5;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.name-tag.active {
+  background: #6C4CF1;
+  color: white;
+  border-color: #6C4CF1;
+  transform: scale(1.12);
+  box-shadow: 0 6px 18px rgba(108,76,241,0.4);
 }
 
 .card {
   background: white;
   border-radius: 24px;
-  padding: 25px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  padding: 30px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
 }
 
-/* Résultat */
-.result {
-  text-align: center;
-  font-size: 34px;
-  font-weight: 700;
-  margin-bottom: 15px;
-  color: #333;
-  min-height: 40px;
-}
-
-/* Zone texte */
 textarea {
   width: 100%;
-  height: 160px;
+  height: 130px;
   border-radius: 16px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #ddd;
   padding: 15px;
   font-size: 16px;
   resize: none;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   box-sizing: border-box;
 }
 
-/* Bouton principal */
 .primary-btn {
   width: 100%;
-  padding: 15px;
-  border-radius: 18px;
+  padding: 16px;
+  border-radius: 20px;
   border: none;
   font-size: 16px;
   font-weight: 600;
@@ -62,68 +81,90 @@ textarea {
   color: white;
   background: linear-gradient(135deg, #6C4CF1, #8E6CFF);
   box-shadow: 0 6px 15px rgba(108,76,241,0.3);
-  transition: 0.2s;
 }
 
-.primary-btn:hover {
-  transform: translateY(-2px);
-}
-
-/* Boutons secondaires */
 .secondary-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 15px;
 }
 
 .secondary-actions button {
   flex: 1;
-  padding: 10px;
-  border-radius: 14px;
+  padding: 12px;
+  border-radius: 16px;
   border: none;
   background: #f2f2f5;
   cursor: pointer;
   font-weight: 500;
 }
 
-.winner {
-  color: #6C4CF1;
-  transform: scale(1.1);
-  transition: 0.3s;
+.result-text {
+  text-align: center;
+  font-size: 22px;
+  margin-top: 25px;
+  font-weight: 600;
+  color: #444;
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
-  <div class="card">
-    <div class="result" id="result">🎯 Tirage au sort</div>
+<div class="container">
 
-    <textarea id="namesInput" placeholder="Un prénom par ligne..."></textarea>
+<h1>🎯 Tirage au sort</h1>
 
-    <button class="primary-btn" id="drawBtn">Lancer le tirage</button>
+<div class="names-grid" id="namesGrid"></div>
 
-    <div class="secondary-actions">
-      <button id="resetBtn">Recommencer</button>
-      <button id="removeBtn">Sans le tiré</button>
-    </div>
+<div class="card">
+  <textarea id="namesInput" placeholder="Un prénom par ligne..."></textarea>
+
+  <button class="primary-btn" id="drawBtn">Lancer le tirage</button>
+
+  <div class="secondary-actions">
+    <button id="resetBtn">Réinitialiser</button>
+    <button id="removeBtn">Sans le tiré</button>
   </div>
+
+  <div class="result-text" id="resultText"></div>
+</div>
+
 </div>
 
 <script>
 let participants = [];
 let lastWinner = null;
+let isDrawing = false;
 
 function updateParticipants() {
   const input = document.getElementById("namesInput").value;
   participants = input
     .split("\n")
-    .map(name => name.trim())
-    .filter(name => name.length > 0);
+    .map(n => n.trim())
+    .filter(n => n.length > 0);
+
+  renderNames();
 }
 
+function renderNames() {
+  const grid = document.getElementById("namesGrid");
+  grid.innerHTML = "";
+
+  participants.forEach(name => {
+    const div = document.createElement("div");
+    div.className = "name-tag";
+    div.textContent = name;
+    grid.appendChild(div);
+  });
+}
+
+document.getElementById("namesInput").addEventListener("input", updateParticipants);
+
 document.getElementById("drawBtn").addEventListener("click", function () {
+
+  if (isDrawing) return;
+
   updateParticipants();
 
   if (participants.length === 0) {
@@ -131,37 +172,57 @@ document.getElementById("drawBtn").addEventListener("click", function () {
     return;
   }
 
-  const resultDiv = document.getElementById("result");
-  resultDiv.classList.remove("winner");
+  isDrawing = true;
+
+  const tags = document.querySelectorAll(".name-tag");
 
   let iterations = 0;
+  const maxIterations = 15; // 15 tours
+  const intervalSpeed = 200; // 200ms -> ~3 secondes total
+
   const interval = setInterval(() => {
-    const randomIndex = Math.floor(Math.random() * participants.length);
-    resultDiv.textContent = participants[randomIndex];
+    tags.forEach(tag => tag.classList.remove("active"));
+
+    const randomIndex = Math.floor(Math.random() * tags.length);
+    tags[randomIndex].classList.add("active");
+
     iterations++;
 
-    if (iterations > 25) {
+    if (iterations >= maxIterations) {
       clearInterval(interval);
+
       const winnerIndex = Math.floor(Math.random() * participants.length);
+
+      tags.forEach(tag => tag.classList.remove("active"));
+      tags[winnerIndex].classList.add("active");
+
       lastWinner = participants[winnerIndex];
-      resultDiv.textContent = "🎉 " + lastWinner;
-      resultDiv.classList.add("winner");
+      document.getElementById("resultText").textContent =
+        lastWinner + " a été tiré(e) au sort ! 🎉";
+
+      isDrawing = false;
     }
-  }, 80);
+
+  }, intervalSpeed);
+
 });
 
 document.getElementById("resetBtn").addEventListener("click", function () {
-  document.getElementById("result").textContent = "🎯 Tirage au sort";
-  document.getElementById("result").classList.remove("winner");
+  if (isDrawing) return;
+
+  document.getElementById("resultText").textContent = "";
+  document.querySelectorAll(".name-tag").forEach(tag => {
+    tag.classList.remove("active");
+  });
 });
 
 document.getElementById("removeBtn").addEventListener("click", function () {
-  if (!lastWinner) return;
+  if (!lastWinner || isDrawing) return;
 
-  participants = participants.filter(name => name !== lastWinner);
+  participants = participants.filter(n => n !== lastWinner);
   document.getElementById("namesInput").value = participants.join("\n");
-  document.getElementById("result").textContent = "🎯 Tirage au sort";
-  document.getElementById("result").classList.remove("winner");
+  updateParticipants();
+  document.getElementById("resultText").textContent = "";
 });
 </script>
 
