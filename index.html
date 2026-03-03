@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Tirage au Sort</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: rgba(0,0,0,0.4);
+  padding: 30px;
+  border-radius: 15px;
+  width: 400px;
+  text-align: center;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  border-radius: 8px;
+  border: none;
+  padding: 10px;
+  margin-bottom: 15px;
+  resize: none;
+}
+
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#drawBtn { background: #00c853; color: white; }
+#resetBtn { background: #2962ff; color: white; }
+#removeBtn { background: #d50000; color: white; }
+
+.result {
+  margin-top: 20px;
+  font-size: 28px;
+  font-weight: bold;
+  min-height: 40px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>🎯 Tirage au Sort</h2>
+  
+  <textarea id="namesInput" placeholder="Entrez un prénom par ligne..."></textarea>
+  
+  <button id="drawBtn">Lancer le tirage</button>
+  <button id="resetBtn">Recommencer</button>
+  <button id="removeBtn">Sans le prénom tiré</button>
+  
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+let participants = [];
+let lastWinner = null;
+let isAnimating = false;
+
+function updateParticipants() {
+  const input = document.getElementById("namesInput").value;
+  participants = input
+    .split("\n")
+    .map(name => name.trim())
+    .filter(name => name.length > 0);
+}
+
+function animateDraw(finalCallback) {
+  const resultDiv = document.getElementById("result");
+  let iterations = 0;
+  isAnimating = true;
+
+  const interval = setInterval(() => {
+    const randomIndex = Math.floor(Math.random() * participants.length);
+    resultDiv.textContent = participants[randomIndex];
+    iterations++;
+
+    if (iterations > 25) {
+      clearInterval(interval);
+      isAnimating = false;
+      finalCallback();
+    }
+  }, 80);
+}
+
+document.getElementById("drawBtn").addEventListener("click", function () {
+  if (isAnimating) return;
+
+  updateParticipants();
+
+  if (participants.length === 0) {
+    alert("Ajoute au moins un prénom !");
+    return;
+  }
+
+  animateDraw(function () {
+    const winnerIndex = Math.floor(Math.random() * participants.length);
+    lastWinner = participants[winnerIndex];
+    document.getElementById("result").textContent = "🎉 " + lastWinner;
+  });
+});
+
+document.getElementById("resetBtn").addEventListener("click", function () {
+  if (isAnimating) return;
+  document.getElementById("result").textContent = "";
+});
+
+document.getElementById("removeBtn").addEventListener("click", function () {
+  if (isAnimating) return;
+  if (!lastWinner) return;
+
+  participants = participants.filter(name => name !== lastWinner);
+  document.getElementById("namesInput").value = participants.join("\n");
+  document.getElementById("result").textContent = "";
+  lastWinner = null;
+});
+</script>
+
+</body>
+</html>
