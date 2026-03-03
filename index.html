@@ -3,135 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <title>Tirage au Sort</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
-  color: white;
-  height: 100vh;
-}
-
-.container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f2f2f5;
   display: flex;
-  width: 100%;
-  height: 100vh;
-}
-
-/* Colonne gauche */
-.left {
-  flex: 1.2;
-  padding: 40px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-
-.left h2 {
-  margin-top: 0;
-}
-
-/* Zone prénoms */
-textarea {
-  flex: 1;
-  width: 100%;
-  border-radius: 12px;
-  border: none;
+  justify-content: center;
   padding: 20px;
-  font-size: 18px;
+}
+
+.app {
+  width: 100%;
+  max-width: 500px;
+}
+
+.card {
+  background: white;
+  border-radius: 24px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* Résultat */
+.result {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #333;
+  min-height: 40px;
+}
+
+/* Zone texte */
+textarea {
+  width: 100%;
+  height: 160px;
+  border-radius: 16px;
+  border: 1px solid #e0e0e0;
+  padding: 15px;
+  font-size: 16px;
   resize: none;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
 }
 
-/* Boutons */
-.buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-button {
-  flex: 1;
-  padding: 14px;
+/* Bouton principal */
+.primary-btn {
+  width: 100%;
+  padding: 15px;
+  border-radius: 18px;
   border: none;
-  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: bold;
-  font-size: 15px;
+  color: white;
+  background: linear-gradient(135deg, #6C4CF1, #8E6CFF);
+  box-shadow: 0 6px 15px rgba(108,76,241,0.3);
   transition: 0.2s;
 }
 
-#drawBtn { background: #00c853; color: white; }
-#resetBtn { background: #2962ff; color: white; }
-#removeBtn { background: #d50000; color: white; }
-
-button:hover {
-  opacity: 0.9;
-  transform: scale(1.02);
+.primary-btn:hover {
+  transform: translateY(-2px);
 }
 
-/* Colonne droite résultat */
-.right {
-  flex: 0.8;
-  background: rgba(0,0,0,0.3);
+/* Boutons secondaires */
+.secondary-actions {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 60px;
-  font-weight: bold;
-  text-align: center;
-  padding: 20px;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-#result {
-  transition: transform 0.3s ease;
+.secondary-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 14px;
+  border: none;
+  background: #f2f2f5;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .winner {
-  transform: scale(1.2);
-}
-
-/* Responsive mobile */
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .right {
-    font-size: 40px;
-    min-height: 200px;
-  }
+  color: #6C4CF1;
+  transform: scale(1.1);
+  transition: 0.3s;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="app">
+  <div class="card">
+    <div class="result" id="result">🎯 Tirage au sort</div>
 
-  <div class="left">
-    <h2>🎯 Tirage au Sort</h2>
+    <textarea id="namesInput" placeholder="Un prénom par ligne..."></textarea>
 
-    <textarea id="namesInput" placeholder="Entrez un prénom par ligne..."></textarea>
+    <button class="primary-btn" id="drawBtn">Lancer le tirage</button>
 
-    <div class="buttons">
-      <button id="drawBtn">Lancer</button>
+    <div class="secondary-actions">
       <button id="resetBtn">Recommencer</button>
       <button id="removeBtn">Sans le tiré</button>
     </div>
   </div>
-
-  <div class="right">
-    <div id="result"></div>
-  </div>
-
 </div>
 
 <script>
 let participants = [];
 let lastWinner = null;
-let isAnimating = false;
 
 function updateParticipants() {
   const input = document.getElementById("namesInput").value;
@@ -141,27 +123,7 @@ function updateParticipants() {
     .filter(name => name.length > 0);
 }
 
-function animateDraw(finalCallback) {
-  const resultDiv = document.getElementById("result");
-  let iterations = 0;
-  isAnimating = true;
-
-  const interval = setInterval(() => {
-    const randomIndex = Math.floor(Math.random() * participants.length);
-    resultDiv.textContent = participants[randomIndex];
-    iterations++;
-
-    if (iterations > 30) {
-      clearInterval(interval);
-      isAnimating = false;
-      finalCallback();
-    }
-  }, 70);
-}
-
 document.getElementById("drawBtn").addEventListener("click", function () {
-  if (isAnimating) return;
-
   updateParticipants();
 
   if (participants.length === 0) {
@@ -172,29 +134,34 @@ document.getElementById("drawBtn").addEventListener("click", function () {
   const resultDiv = document.getElementById("result");
   resultDiv.classList.remove("winner");
 
-  animateDraw(function () {
-    const winnerIndex = Math.floor(Math.random() * participants.length);
-    lastWinner = participants[winnerIndex];
-    resultDiv.textContent = "🎉 " + lastWinner;
-    resultDiv.classList.add("winner");
-  });
+  let iterations = 0;
+  const interval = setInterval(() => {
+    const randomIndex = Math.floor(Math.random() * participants.length);
+    resultDiv.textContent = participants[randomIndex];
+    iterations++;
+
+    if (iterations > 25) {
+      clearInterval(interval);
+      const winnerIndex = Math.floor(Math.random() * participants.length);
+      lastWinner = participants[winnerIndex];
+      resultDiv.textContent = "🎉 " + lastWinner;
+      resultDiv.classList.add("winner");
+    }
+  }, 80);
 });
 
 document.getElementById("resetBtn").addEventListener("click", function () {
-  if (isAnimating) return;
-  document.getElementById("result").textContent = "";
+  document.getElementById("result").textContent = "🎯 Tirage au sort";
   document.getElementById("result").classList.remove("winner");
 });
 
 document.getElementById("removeBtn").addEventListener("click", function () {
-  if (isAnimating) return;
   if (!lastWinner) return;
 
   participants = participants.filter(name => name !== lastWinner);
   document.getElementById("namesInput").value = participants.join("\n");
-  document.getElementById("result").textContent = "";
+  document.getElementById("result").textContent = "🎯 Tirage au sort";
   document.getElementById("result").classList.remove("winner");
-  lastWinner = null;
 });
 </script>
 
